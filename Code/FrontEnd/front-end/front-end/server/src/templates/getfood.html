@@ -1,0 +1,217 @@
+{% extends "bootstrap/base.html" %}
+{% block title %}This is an example page{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link rel="stylesheet" type="text/css" href=".\customcss.css"/>
+{% endblock %}
+
+
+{% block body %}
+{% block navbar %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark ">
+  
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <a class="navbar-brand" href="{{url_for('home')}}">Food Rescuer</a>
+      <ul class="navbar-nav">
+        <li class="nav-item active">
+          <a class="nav-link" href="{{url_for('home')}}">Home <span class="sr-only">(current)</span></a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{url_for('donate_food')}}">Donate Food</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{url_for('get_food')}}">Get food</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+{% endblock %}
+
+{% block content %}
+
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+      
+  <h1>Pick up food</h1>
+  <hr>
+  <form>
+  <div class="form-group">
+      <!-- <label for="business-type">Select type of business</label> -->
+      <select class="form-control" id="business-type" name="business-type">
+        <option>Select busines type </option>
+        <option>Soup Kitchen </option>
+        <option>Personal</option>
+        <option>Food bank</option>
+      </select>
+    </div>
+    <input type="hidden" name="latval" id="latval" value="">
+    <input type="hidden" name="lngval" id="lngval" value="">
+    <div class="row mb-2">
+      <div class="col">
+        <input class="form-control" id="search" type="text" placeholder="Select your location" name="location"/>
+        <div id="map" name="map-data"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+  
+
+  {{googlemap("sample_map", lat=39.1653, lng=-86.5264, markers=[(0.12,
+  -0.45345)])}}
+
+  <div class="md-form md-outline">
+    <center><button type="submit" class="btn-block btn-primary" style="margin-top:20px;">Submit</button></center>
+  </div>
+  </form>
+  <div id="resultsdiv" style="display: none; margin-top:20px;">
+    <h3>Results</h3>
+    <hr>
+  </div>
+  </div>
+</div>
+  
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=YOURKEY&callback=createMap&libraries=places" async defer></script>
+  
+  <script>
+      
+      var map;
+
+function createMap () {
+  var options = {
+    center: { lat: 43.654, lng: -79.383 },
+    zoom: 10
+  };
+
+  map = new google.maps.Map(document.getElementById('map'), options);
+  
+  var input = document.getElementById('search');
+  var searchBox = new google.maps.places.SearchBox(input);
+
+  map.addListener('bounds_changed', function() {
+    searchBox.setBounds(map.getBounds());
+  });
+
+  var markers = [];
+  
+  searchBox.addListener('places_changed', function () {
+    var places = searchBox.getPlaces();
+  
+
+    if (places.length == 0)
+      return;
+
+    markers.forEach(function (m) { m.setMap(null); });
+    markers = [];
+
+    var bounds = new google.maps.LatLngBounds();
+    places.forEach(function(p) {
+      if (!p.geometry)
+        return;
+
+      markers.push(new google.maps.Marker({
+        map: map,
+        title: p.name,
+        position: p.geometry.location
+      }));
+      console.log("reaching script"+markers.forEach(function(point){
+        document.getElementById("latval").value = point.getPosition().lat() ;
+      document.getElementById("lngval").value = point.getPosition().lng() ;
+      }))
+    
+      if (p.geometry.viewport)
+        bounds.union(p.geometry.viewport);
+      else
+        bounds.extend(p.geometry.location);
+    });
+    
+    map.fitBounds(bounds);
+  });
+
+}  
+
+
+$(document).ready(function(){
+  $('form').on('submit',function(event){
+
+    $("#resultsdiv").html("");
+    $.ajax({
+      data:{
+        'business-type':$('#business-type').val(),
+          'latval':$('#latval').val(),
+          'lngval':$('#lngval').val()
+      },
+      type:'POST',
+      url:'/get-food-listings'
+    })
+    .done(function(data){
+      if(data.error){
+        alert(data.error);
+        
+      }else{
+        console.log(data)
+        console.log(data["success"].length);
+        data=data["success"]
+        
+        food_items=[];
+        for (var key of Object.keys(data)) {
+          food_items.push(data[key])
+        }
+
+        for(var i =0;i<food_items.length;i++){
+          var tempdiv=document.createElement("div");
+          console.log("COLLECTION ID IS"+food_items[i]["collection_id"]);
+          tempdiv.innerHTML='<div class="container" id="newdiv"><div class="col-sm-12"><section class="search-result-item"><img class="img-fluid" src='+food_items[i]["image"]+' style=height:10%"; width=10%><div class="search-result-item-body"><div class="row"><div class="col-sm-9"><h4 class="search-result-item-heading">'+food_items[i]['title']+'</h4><p class="info"></p><p class="description">'+food_items[i]['address']+'</p></div><div class="col-sm-3 text-align-center"><p class="value3 mt-sm">'+food_items[i]["date"]+' &nbsp  '+ food_items[i]["pickup"]+'</p><p class="fs-mini text-muted"></p><form><input type="hidden" name="collection_id" id="collection_id" value="'+food_items[i]["collection_id"]+'"/><input type="hidden" name="itemId" id="itemId" value="'+food_items[i]["food_item_id"]+'"/><button class="btn btn-primary btn-info btn-sm name="itemID" id="'+food_items[i]["food_item_id"]+'" value="'+food_items[i]["food_item_id"]+'">Pick up</button></form></div></div></div></section></div></div></div>';
+          document.getElementById("resultsdiv").appendChild(tempdiv);
+          console.log(food_items[i])
+        }
+        $('#resultsdiv').show();
+
+      }
+    })
+    event.preventDefault();
+  })
+})
+
+
+
+$("#resultsdiv").on( "click", ".container button", function(){ 
+      alert( "Triggred by " + document.getElementById("itemId").value); 
+      alert( "Triggred by " + document.getElementById("collection_id").value); 
+      $.ajax({
+      data:{
+        'collection_id':document.getElementById("collection_id").value,
+          'itemId':document.getElementById("itemId").value
+      },
+      type:'POST',
+      url:'/book-food'
+    })
+    .done(function(data){
+      if(data.error){
+        alert(data.error);
+      }else{
+        alert("Item pick up successfully confirmed");
+      }
+    })
+    event.preventDefault();
+    }); 
+  </script>
+
+{{super()}}
+{%endblock%}
+
+{% endblock %}
+
+{% endblock %}
+
