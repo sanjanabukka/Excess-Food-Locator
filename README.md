@@ -1,8 +1,3 @@
-This a final project for Cloud Computing (CSCI-B 649) class.
-
-### Motivation: 
-With COVID hitting the world in 2020, many families and the homeless
-struggle with food insecurities due to financial issues.
 
 ### Problem statement and Use case: 
 This is an application for donating and finding extra/surplus/unused food. The application allows users to upload photos of food items
@@ -68,8 +63,6 @@ more details.
   * Firestore: The images are categorized into 4 collections namely default, soup_kitchen,
 individuals and food_banks.
 
-### Workflow
-![alt text](https://github.com/JShivali/FoodRescuer/blob/main/system_flow.PNG?raw=true)
 
 ### Cloud APIs used:
 * Cloud Functions: For getting image from bucket and calling vision API and storing 
